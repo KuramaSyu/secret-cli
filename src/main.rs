@@ -5,7 +5,7 @@ use rand::distributions::Alphanumeric;
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    #[arg(short, long, default_value_t = 32)]
+    #[arg(default_value_t = 32)]
     length: u32
 }
 
