@@ -8,12 +8,15 @@ struct Args {
     #[arg(default_value_t = 32)]
     length: u32,
     #[arg(short = 'n', long, action = ArgAction::SetTrue)]
-    only_numbers: bool
+    only_numbers: bool,
+    #[arg(short = 'v', long, action = ArgAction::SetTrue)]
+    verbose: bool
 }
 
 fn main() {
     let args = Args::parse();
     let number: u32 = args.length;
+    let verbose: bool = args.verbose;
     let only_numbers: bool = args.only_numbers;
     let mut secret: String = String::from("");
     let mut rng = rand::thread_rng();
@@ -26,5 +29,9 @@ fn main() {
             secret.push(rng.sample(&Alphanumeric) as char);
         }
     }
-    println!("Secret: {}", secret);
+    if verbose {
+        println!("Secret:\n--------\n{}\n--------", secret);
+    } else {
+        println!("{secret}");
+    }
 }
