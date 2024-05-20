@@ -35,7 +35,7 @@ fn main() {
             true, 
             true, 
             true, 
-            true
+            false
         );
     } else {
         character_set = make_character_set(
@@ -79,7 +79,7 @@ fn make_character_set(
         character_set.push_str(&chars);      
     }
     if symbols {
-        character_set.push_str("!@#$%&*()_+-=:,.?");
+        character_set.push_str("!@#$%&*_+-=.?");
     }
     return character_set
 }
