@@ -1,6 +1,5 @@
 use clap::{Parser, ArgAction}; //Subcommand
 use rand::prelude::*;
-use rand::distributions::Alphanumeric;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -21,20 +20,37 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    let number: u32 = args.length;
+    let length: u32 = args.length;
     let verbose: bool = args.verbose;
-    let only_numbers: bool = args.numbers;
     let mut secret: String = String::from("");
     let mut rng = rand::thread_rng();
-    let character_set: String = make_character_set(args.numbers, args.lower_letters, args.upper_letters, args.symbols);
-    if only_numbers {
-        for _ in 0..number{
-            secret.push_str(&rng.gen_range(0..character_set).to_string())
-        }
+    let character_set: String;
+    if 
+        !args.numbers 
+        && !args.lower_letters 
+        && ! args.upper_letters
+        && !args.symbols
+    {
+        character_set = make_character_set(
+            true, 
+            true, 
+            true, 
+            true
+        );
     } else {
-        for _ in 0..number {
-            secret.push(rng.sample(&Alphanumeric) as char);
-        }
+        character_set = make_character_set(
+            args.numbers, 
+            args.lower_letters, 
+            args.upper_letters,
+            args.symbols
+        );
+    }
+
+    for _ in 0..length{
+        let index = rng.gen_range(0..character_set.len());
+        secret.push_str(
+            &character_set.chars().nth(index).unwrap().to_string()
+        );
     }
     if verbose {
         println!("Secret:\n--------\n{}\n--------", secret);
@@ -63,7 +79,7 @@ fn make_character_set(
         character_set.push_str(&chars);      
     }
     if symbols {
-        character_set.push_str("!@#$%^&*()_+-=[]{}|;:,.<>?");
+        character_set.push_str("!@#$%&*()_+-=:,.?");
     }
     return character_set
 }
