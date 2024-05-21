@@ -88,7 +88,7 @@ fn make_character_set(
     if symbols {
         character_set.push_str("!@#$%&*_+-=.?");
     }
-    return character_set
+    character_set
 }
 
 fn generate_character_secret(character_set: String, length: i32) -> String {
