@@ -1,5 +1,5 @@
 # secret
-A project to easily generate passwords or passphrases.
+A project to easily generate passwords or passphrases. The goal was to have a better alternative to `openssl rand -hex 32` or worse linux equivalents.
 
 # how does it work?
 ```
