@@ -135,9 +135,9 @@ fn generate_word_secret(
     words: Vec<String>, 
     length: i32, 
     with_numbers: bool,
-    with_lowercase_letters: bool,
+    _with_lowercase_letters: bool,
     with_uppercase_letters: bool,
-    with_symbols: bool,
+    _with_symbols: bool,
 ) -> String {
     let mut secret = String::new();
     let mut rng = rand::thread_rng();
@@ -158,7 +158,7 @@ fn generate_word_secret(
         ("i", "1"),
     ].iter().cloned().collect();
     if with_uppercase_letters {
-        let amount: usize = secret.len() / 4;
+        let amount: usize = secret.len() / 5;
         let mut uppercase_indices: Vec<usize> = Vec::new();
         for _ in 0..amount {
             let mut num: usize = rng.gen_range(0..secret.len());
