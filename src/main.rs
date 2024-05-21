@@ -58,7 +58,14 @@ fn main() {
         let wordlist = load_wordlist_from_embedded(
             &format!("{0}.txt", args.language)
         ).unwrap();
-        secret = generate_word_secret(wordlist, args.length.unwrap_or(5) as i32, args.numbers);
+        secret = generate_word_secret(
+            wordlist, 
+            args.length.unwrap_or(5) as i32, 
+            args.numbers,
+            args.lower_letters,
+            args.upper_letters,
+            args.symbols
+        );
     } else {
         secret = generate_character_secret(
             character_set, 
@@ -124,7 +131,14 @@ fn load_wordlist_from_embedded(filename: &str) -> io::Result<Vec<String>> {
     Ok(words)
 }
 
-fn generate_word_secret(words: Vec<String>, length: i32, with_numbers: bool) -> String {
+fn generate_word_secret(
+    words: Vec<String>, 
+    length: i32, 
+    with_numbers: bool,
+    with_lowercase_letters: bool,
+    with_uppercase_letters: bool,
+    with_symbols: bool,
+) -> String {
     let mut secret = String::new();
     let mut rng = rand::thread_rng();
     for n_ in 0..length {
@@ -136,17 +150,36 @@ fn generate_word_secret(words: Vec<String>, length: i32, with_numbers: bool) -> 
             secret.push_str(word);
         }
     }
+    secret = secret.to_lowercase();
     let leetspeak: HashMap<&str, &str> = [
         ("a", "4"),
         ("e", "3"),
         ("o", "0"),
         ("i", "1"),
     ].iter().cloned().collect();
-    if !with_numbers {
-        return secret
+    if with_uppercase_letters {
+        let amount: usize = secret.len() / 4;
+        let mut uppercase_indices: Vec<usize> = Vec::new();
+        for _ in 0..amount {
+            let mut num: usize = rng.gen_range(0..secret.len());
+            while uppercase_indices.contains(&num) {
+                num += 1;
+                num = num % secret.len();
+            }
+            uppercase_indices.push(num)
+        }
+        secret = secret.chars().enumerate().map(|(i, char)| {
+            if uppercase_indices.contains(&i) {
+                return char.to_ascii_uppercase();
+            }
+            return char
+        }).collect::<String>();
     }
-    for (key, value) in leetspeak {
-        secret = secret.replace(key, value);
+    if with_numbers {
+        for (key, value) in leetspeak {
+            secret = secret.replace(key, value);
+        }
     }
+
     secret
 }
