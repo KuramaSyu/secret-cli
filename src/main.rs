@@ -23,7 +23,7 @@ struct Args {
     symbols: bool,
     #[arg(short = 'w', long, action = ArgAction::SetTrue, help = "Wether to use words instead of characters")]
     words: bool,
-    #[arg(short = 'l', long, default_value_t = String::from("ger"))]
+    #[arg(short = 'l', long, default_value_t = String::from("ger"), help = "Set the language. [ger | eng]")]
     language: String
 }
 
