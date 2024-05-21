@@ -23,7 +23,9 @@ struct Args {
     #[arg(short = 's', long, action = ArgAction::SetTrue, help = "Wether to use symbols")]
     symbols: bool,
     #[arg(short = 'w', long, action = ArgAction::SetTrue, help = "Wether to use words instead of characters")]
-    words: bool
+    words: bool,
+    #[arg(short = 'l', long, default_value_t = String::from("ger"))]
+    language: String
 }
 
 fn main() {
@@ -53,7 +55,9 @@ fn main() {
         );
     }
     if args.words {
-        let wordlist = load_wordlist_from_embedded("eng.txt").unwrap();
+        let wordlist = load_wordlist_from_embedded(
+            &format!("{0}.txt", args.language)
+        ).unwrap();
         secret = generate_word_secret(wordlist, args.length.unwrap_or(5) as i32, args.numbers);
     } else {
         secret = generate_character_secret(
