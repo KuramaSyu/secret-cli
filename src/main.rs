@@ -1,7 +1,6 @@
 use clap::{Parser, ArgAction}; //Subcommand
 use rand::prelude::*;
 use std::io::{self, BufRead};
-use std::collections::HashMap;
 use include_dir::{include_dir, Dir};
 
 // Embed the entire `wordlists` directory
@@ -151,12 +150,12 @@ fn generate_word_secret(
         }
     }
     secret = secret.to_lowercase();
-    let leetspeak: HashMap<&str, &str> = [
-        ("a", "4"),
-        ("e", "3"),
-        ("o", "0"),
-        ("i", "1"),
-    ].iter().cloned().collect();
+    const LEETSPEAK: [[&str; 2]; 4] = [
+        ["a", "4"],
+        ["e", "3"],
+        ["o", "0"],
+        ["i", "1"],
+    ];
     if with_uppercase_letters {
         let amount: usize = secret.len() / 5;
         let mut uppercase_indices: Vec<usize> = Vec::new();
@@ -176,7 +175,7 @@ fn generate_word_secret(
         }).collect::<String>();
     }
     if with_numbers {
-        for (key, value) in leetspeak {
+        for [key, value] in LEETSPEAK {
             secret = secret.replace(key, value);
         }
     }
