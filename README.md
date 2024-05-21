@@ -68,7 +68,7 @@ O__$=$vvI+xat-q*S+q%r=6gg++Ibm6HpoL@UWhk@x
 
 # Passphrase examples
 #### Passphares work the same, but `-w | --word` as option is needed
-### without anything
+### Without anything
 ```
 ./secret -w
 neunzehn-Wolkenlos-Holzhammer-Quelle-Ritzel
