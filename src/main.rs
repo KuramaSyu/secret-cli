@@ -4,6 +4,10 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
 use std::collections::HashMap;
+use include_dir::{include_dir, Dir};
+
+// Embed the entire `wordlists` directory
+static WORDLISTS_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/wordlists");
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = "A tool to generate secrets. By default it uses numbers, lower case letters and upper case letters (-naA)")]
@@ -51,7 +55,7 @@ fn main() {
         );
     }
     if args.words {
-        let wordlist = load_file("./wordlists/eng.txt").unwrap();
+        let wordlist = load_wordlist_from_embedded("eng.txt").unwrap();
         secret = generate_word_secret(wordlist, args.length.unwrap_or(5) as i32, args.numbers);
     } else {
         secret = generate_character_secret(
@@ -103,11 +107,14 @@ fn generate_character_secret(character_set: String, length: i32) -> String {
     secret
 }
 
-fn load_file(filename: &str) -> io::Result<Vec<String>> {
-    let file = File::open(
-        &Path::new(filename)
-    )?;
-    let reader = io::BufReader::new(file);
+fn load_wordlist_from_embedded(filename: &str) -> io::Result<Vec<String>> {
+    let file = WORDLISTS_DIR.get_file(filename).ok_or_else(|| {
+        io::Error::new(io::ErrorKind::NotFound, format!("File {} not found", filename))
+    })?;
+    let content = file.contents_utf8().ok_or_else(|| {
+        io::Error::new(io::ErrorKind::InvalidData, format!("Invalid UTF-8 in file {}", filename))
+    })?;
+    let reader = io::BufReader::new(content.as_bytes());
     let mut words = Vec::new();
     for line in reader.lines() {
         words.push(line?);
