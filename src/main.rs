@@ -13,8 +13,6 @@ struct Args {
     length: Option<u32>,
     #[arg(short = 'n', long, action = ArgAction::SetTrue, help = "Wether to use numbers")]
     numbers: bool,
-    #[arg(short = 'v', long, action = ArgAction::SetTrue, help = "Wether to be verbose")]
-    verbose: bool,
     #[arg(short = 'a', long, action = ArgAction::SetTrue, help = "Wether to use lower case letters")]
     lower_letters: bool,
     #[arg(short = 'A', long, action = ArgAction::SetTrue, help = "Wether to use upper case letters")]
@@ -30,13 +28,12 @@ struct Args {
 fn main() {
     let args = Args::parse();
     let length: Option<u32> = args.length;
-    let verbose: bool = args.verbose;
     let character_set: String;
     let secret: String;
     if 
         !args.numbers 
         && !args.lower_letters 
-        && ! args.upper_letters
+        && !args.upper_letters
         && !args.symbols
     {
         character_set = make_character_set(
@@ -71,11 +68,7 @@ fn main() {
             length.unwrap_or(20) as i32
         );
     }
-    if verbose {
-        println!("Secret:\n--------\n{}\n--------", secret);
-    } else {
-        println!("{secret}");
-    }
+    println!("{secret}");
 }
 
 fn make_character_set(
