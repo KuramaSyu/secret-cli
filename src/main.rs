@@ -1,7 +1,8 @@
 use clap::{Parser, ArgAction}; //Subcommand
 use rand::prelude::*;
-use std::io::{self, BufRead};
+use std::{env::current_dir, io::{self, BufRead}};
 use include_dir::{include_dir, Dir};
+mod config;
 
 // Embed the entire `wordlists` directory
 static WORDLISTS_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/wordlists");
@@ -21,8 +22,8 @@ struct Args {
     symbols: bool,
     #[arg(short = 'w', long, action = ArgAction::SetTrue, help = "Wether to use words instead of characters")]
     words: bool,
-    #[arg(short = 'l', long, default_value_t = String::from("ger"), help = "Set the language. [ger | eng]")]
-    language: String
+    #[arg(short = 'l', long, default_value = None, help = "Set the language. [ger | eng]")]
+    language: Option<String>
 }
 
 fn main() {
@@ -30,6 +31,22 @@ fn main() {
     let length: Option<u32> = args.length;
     let character_set: String;
     let secret: String;
+    let current_dir_bind = std::env::current_dir().unwrap();
+    let current_dir = current_dir_bind.to_str().unwrap();
+    println!("{current_dir:?}");
+    let config_ = config::load_config("config.yaml");
+    let language = {
+            if args.language.is_some() {
+                args.language.unwrap()
+            } else {
+                let language: Option<&str> = config::get_language(&config_);
+                match language  {
+                    Some(l) => l.to_owned(),
+                    None => String::from("ger"),
+                }
+            }
+        };
+
     if 
         !args.numbers 
         && !args.lower_letters 
@@ -52,7 +69,7 @@ fn main() {
     }
     if args.words {
         let wordlist = load_wordlist_from_embedded(
-            &format!("{0}.txt", args.language)
+            &format!("{0}.txt", language)
         ).unwrap();
         secret = generate_word_secret(
             wordlist, 
