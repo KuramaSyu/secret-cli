@@ -1,7 +1,9 @@
 use clap::{Parser, ArgAction}; //Subcommand
 use rand::prelude::*;
-use std::{env::current_dir, io::{self, BufRead}};
+use std::{borrow::BorrowMut, env::current_dir, io::{self, BufRead}};
 use include_dir::{include_dir, Dir};
+
+use crate::config::set_language;
 mod config;
 
 // Embed the entire `wordlists` directory
@@ -25,6 +27,7 @@ struct Args {
     #[arg(short = 'l', long, default_value = None, help = "Set the language. [ger | eng]")]
     language: Option<String>
 }
+const PATH: &str = "config.yaml";
 
 fn main() {
     let args = Args::parse();
@@ -33,13 +36,14 @@ fn main() {
     let secret: String;
     let current_dir_bind = std::env::current_dir().unwrap();
     let current_dir = current_dir_bind.to_str().unwrap();
-    println!("{current_dir:?}");
-    let config_ = config::load_config("config.yaml");
+    let mut config_ = config::load_config(PATH);
     let language = {
             if args.language.is_some() {
-                args.language.unwrap()
+                let lang = args.language.unwrap();
+                set_language(&mut config_, &lang, PATH);
+                lang
             } else {
-                let language: Option<&str> = config::get_language(&config_);
+                let language: Option<&str> = config::get_language(&mut config_);
                 match language  {
                     Some(l) => l.to_owned(),
                     None => String::from("ger"),
