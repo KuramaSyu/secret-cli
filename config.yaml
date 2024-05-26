@@ -1,2 +1,8 @@
 options:
   language: eng
+  length: null
+  length_passphrase: 5
+  upper_letters: false
+  lower_letters: true
+  symbols: false
+  words: true
