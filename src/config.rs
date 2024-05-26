@@ -1,10 +1,7 @@
 use serde_yaml;
 use serde::{Serialize, Deserialize};
-use std::borrow::BorrowMut;
 use std::fs::{File, OpenOptions};
 use std::io::prelude::*;
-use std::io;
-use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 struct Options {
@@ -22,10 +19,28 @@ pub struct Config {
     options: Options
 }
 
-
-
 pub fn load_config(path: &str, verbose: bool) -> Config {
-    let mut handler: File = File::open(path).unwrap();
+    let default_config: Config = Config {
+        options: Options {
+            language: "ger".to_owned(),
+            length: None,
+            length_passphrase: 5,
+            upper_letters: false,
+            lower_letters: true,
+            symbols: false,
+            words: true,
+        }
+    };
+    let handler_result = File::open(path);
+    let mut handler = match handler_result {
+        Err(err) => {
+            if verbose {
+                println!("Can't use `config.yaml`: {}", err)
+            }
+            return default_config
+        },
+        Ok(f) => f
+    };
     let mut content = String::new();
     handler.read_to_string(&mut content).unwrap();
     let yaml_result: Result<Config, serde_yaml::Error> = serde_yaml::from_str(content.as_str());
@@ -36,17 +51,6 @@ pub fn load_config(path: &str, verbose: bool) -> Config {
                 println!("`config.yaml` is wrong formatted: {}", error.to_string());
                 println!("Using default config");
             }
-            let default_config: Config = Config {
-                options: Options {
-                    language: "ger".to_owned(),
-                    length: None,
-                    length_passphrase: 5,
-                    upper_letters: false,
-                    lower_letters: true,
-                    symbols: false,
-                    words: true,
-                }
-            };
             default_config
         }
     }
