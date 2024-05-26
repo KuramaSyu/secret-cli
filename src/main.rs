@@ -25,7 +25,9 @@ struct Args {
     #[arg(short = 'w', long, action = ArgAction::SetTrue, help = "Wether to use words instead of characters")]
     words: bool,
     #[arg(short = 'l', long, default_value = None, help = "Set the language. [ger | eng]")]
-    language: Option<String>
+    language: Option<String>,
+    #[arg(short = 'v', long, default_value_t = false, help = "Wheter or not the program should be verbose")]
+    verbose: bool
 }
 const PATH: &str = "config.yaml";
 
@@ -35,15 +37,16 @@ fn main() {
     let character_set: String;
     let secret: String;
     let current_dir_bind = std::env::current_dir().unwrap();
-    let current_dir = current_dir_bind.to_str().unwrap();
-    let mut config_ = config::load_config(PATH);
+    let _current_dir = current_dir_bind.to_str().unwrap();
+    let verbose = args.verbose;
+    let mut conf = config::load_config(PATH, verbose);
     let language = {
             if args.language.is_some() {
                 let lang = args.language.unwrap();
-                set_language(&mut config_, &lang, PATH);
+                set_language(&mut conf, &lang, PATH);
                 lang
             } else {
-                let language: Option<&str> = config::get_language(&mut config_);
+                let language: Option<&str> = config::get_language(&mut conf);
                 match language  {
                     Some(l) => l.to_owned(),
                     None => String::from("ger"),
