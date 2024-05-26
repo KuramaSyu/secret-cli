@@ -1,6 +1,6 @@
 use clap::{Parser, ArgAction}; //Subcommand
 use rand::prelude::*;
-use std::{borrow::BorrowMut, env::current_dir, io::{self, BufRead}};
+use std::io::{self, BufRead};
 use include_dir::{include_dir, Dir};
 
 use crate::config::set_language;
