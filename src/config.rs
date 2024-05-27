@@ -3,6 +3,7 @@ use serde::{Serialize, Deserialize};
 use std::fs::{File, OpenOptions};
 use std::io::prelude::*;
 
+
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 struct Options {
     language: String,
@@ -11,13 +12,15 @@ struct Options {
     upper_letters: bool,
     lower_letters: bool,
     symbols: bool,
-    words: bool,
-
+    words: bool
 }
+
+
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Config {
     options: Options
 }
+
 
 pub fn load_config(path: &str, verbose: bool) -> Config {
     let default_config: Config = Config {
