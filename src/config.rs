@@ -5,20 +5,35 @@ use std::io::prelude::*;
 
 /// Struct representing the options for generating random data.
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
-struct Options {
-    language: String,
-    length: Option<usize>,
-    length_passphrase: usize,
-    upper_letters: bool,
-    lower_letters: bool,
-    symbols: bool,
-    words: bool
+pub struct Options {
+    pub language: String,
+    pub length: Option<usize>,
+    pub upper_letters: bool,
+    pub lower_letters: bool,
+    pub symbols: bool,
+    pub words: bool,
+    pub numbers: bool,
 }
 
 /// Struct representing the configuration for the random generator.
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Config {
-    options: Options
+    pub options: Options
+}
+
+impl Config {
+    pub fn is_valid(&self) -> bool {
+        let options = &self.options;
+        if 
+        !options.upper_letters 
+        && !options.lower_letters 
+        && !options.symbols
+        && !options.words 
+        && !options.numbers {
+            return false
+        }
+        true
+    }
 }
 
 /// Loads the configuration from a YAML file.
@@ -36,11 +51,11 @@ pub fn load_config(path: &str, verbose: bool) -> Config {
         options: Options {
             language: "ger".to_owned(),
             length: None,
-            length_passphrase: 5,
             upper_letters: false,
             lower_letters: true,
             symbols: false,
             words: true,
+            numbers: false,
         }
     };
     let handler_result = File::open(path);
@@ -103,7 +118,8 @@ pub fn set_defaults(
     upper_letters: bool,
     lower_letters: bool,
     symbols: bool,
-    words: bool
+    words: bool,
+    numbers: bool,
 ) -> () {
     let handler = OpenOptions::new().write(true).open(path);
     let is_ok = match handler {
@@ -125,6 +141,7 @@ pub fn set_defaults(
     config.options.lower_letters = lower_letters;
     config.options.symbols = symbols;
     config.options.words = words;
+    config.options.numbers = numbers;
     
     serde_yaml::to_writer(handler.unwrap(), &config).unwrap();
 }
