@@ -1,5 +1,6 @@
 use clap::{Parser, ArgAction}; //Subcommand
 use rand::prelude::*;
+use core::panic;
 use std::io::{self, BufRead};
 use include_dir::{include_dir, Dir};
 
@@ -33,6 +34,10 @@ struct Args {
 }
 const PATH: &str = "config.yaml";
 
+fn get_by_arg_or_config<T>(use_config: bool, cli_arg: T, config_arg: T) -> T {
+    if use_config {config_arg} else {cli_arg}
+}
+
 fn main() {
     let args = Args::parse();
     let length: Option<usize> = args.length;
@@ -43,18 +48,17 @@ fn main() {
     let verbose = args.verbose;
     let mut conf = config::load_config(PATH, verbose);
     let language = {
-            if args.language.is_some() {
-                // given by flag
-                args.language.unwrap()
-            } else {
-                let language: Option<&str> = config::get_language(&mut conf);
-                match language  {
-                    Some(l) => l.to_owned(), // given by config
-                    None => String::from("ger"), // not given
-                }
+        if args.language.is_some() {
+            // given by flag
+            args.language.unwrap()
+        } else {
+            let language: Option<&str> = config::get_language(&mut conf);
+            match language  {
+                Some(l) => l.to_owned(), // given by config
+                None => String::from("ger"), // not given
             }
-        };
-    
+        }
+    };
     if args.set_default {
         set_defaults(
             &mut conf, 
@@ -64,49 +68,69 @@ fn main() {
             args.upper_letters,
             args.lower_letters,
             args.symbols,
-            args.words
+            args.words,
+            args.numbers
+        );
+    }
 
-        );
-    }
-    // make character set 
-    if 
-        !args.numbers 
-        && !args.lower_letters 
-        && !args.upper_letters
-        && !args.symbols
-    {
-        // no flags set -> use default values
-        character_set = make_character_set(
-            true, 
-            true, 
-            true, 
+    
+    // whether or not to use the config file
+    let use_config: bool = {
+        if 
+            !args.numbers 
+            && !args.lower_letters 
+            && !args.upper_letters
+            && !args.symbols
+            && !args.words
+        {
+            true
+        } else {
             false
-        );
-    } else {
-        // use given flags
-        character_set = make_character_set(
-            args.numbers, 
-            args.lower_letters, 
-            args.upper_letters,
-            args.symbols
-        );
+        }
+    };
+
+    if use_config && !conf.is_valid() {
+        let error = r#"
+        There where no flags provided
+        -> use config.yaml
+        Issue: seems like all flags in the configs are set to false.
+        Change it by using the --set-default flag.
+        Example:
+        secret 10 -naAs --set-default
+"#;
+        panic!("{}", error.lines().map(|line| line.trim()).collect::<Vec<&str>>().join("\n"));
     }
+
+
+    let words = get_by_arg_or_config(use_config, args.words, conf.options.words);
+    let numbers = get_by_arg_or_config(use_config, args.numbers, conf.options.numbers);
+    let lower_letters = get_by_arg_or_config(use_config, args.lower_letters, conf.options.lower_letters);
+    let upper_letters = get_by_arg_or_config(use_config, args.upper_letters, conf.options.upper_letters);
+    let symbols = get_by_arg_or_config(use_config, args.symbols, conf.options.symbols);
+    let length = get_by_arg_or_config(use_config, length, conf.options.length);
+
     // generate the secret...
-    if args.words {
+    if words {
         // ...with words
         let wordlist = load_wordlist_from_embedded(
             &format!("{0}.txt", language)
         ).unwrap();
         secret = generate_word_secret(
             wordlist, 
-            args.length.unwrap_or(5) as i32, 
-            args.numbers,
-            args.lower_letters,
-            args.upper_letters,
-            args.symbols
+            length.unwrap_or(5) as i32, 
+            numbers,
+            lower_letters,
+            upper_letters,
+            symbols
         );
     } else {
         // ...with a character sequence
+        character_set = make_character_set(
+            numbers, 
+            lower_letters, 
+            upper_letters,
+            symbols
+        );
         secret = generate_character_secret(
             character_set, 
             length.unwrap_or(20) as i32
