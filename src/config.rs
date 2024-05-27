@@ -3,7 +3,7 @@ use serde::{Serialize, Deserialize};
 use std::fs::{File, OpenOptions};
 use std::io::prelude::*;
 
-
+/// Struct representing the options for generating random data.
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 struct Options {
     language: String,
@@ -15,13 +15,22 @@ struct Options {
     words: bool
 }
 
-
+/// Struct representing the configuration for the random generator.
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Config {
     options: Options
 }
 
-
+/// Loads the configuration from a YAML file.
+///
+/// # Arguments
+///
+/// * `path` - The path to the YAML file.
+/// * `verbose` - Whether to print verbose output.
+///
+/// # Returns
+///
+/// The loaded configuration.
 pub fn load_config(path: &str, verbose: bool) -> Config {
     let default_config: Config = Config {
         options: Options {
@@ -59,15 +68,47 @@ pub fn load_config(path: &str, verbose: bool) -> Config {
     }
 }
 
+/// Gets the language from the configuration.
+///
+/// # Arguments
+///
+/// * `config` - The configuration.
+///
+/// # Returns
+///
+/// The language as an `Option<&str>`.
 pub fn get_language<'a>(config: &'a mut Config) -> Option<&'a str> {
     Some(&config.options.language)
 }
 
-pub fn set_language(config: &mut Config, lang: &str, path: &str) -> () {
+/// Sets the given flags as default in the config.yaml file.
+///
+/// If an argument is None, then it won't be set
+/// 
+/// # Arguments
+///
+/// * `config` - The configuration.
+/// * `path` - The path to the config.yaml file.
+/// * `lang` - The language to set as default.
+/// * `length` - The length to set as default.
+/// * `upper_letters` - Whether to include upper case letters.
+/// * `lower_letters` - Whether to include lower case letters.
+/// * `symbols` - Whether to include symbols.
+/// * `words` - Whether to include words.
+pub fn set_defaults(
+    config: &mut Config,
+    path: &str, 
+    lang: Option<&str>,
+    length: Option<usize>,
+    upper_letters: bool,
+    lower_letters: bool,
+    symbols: bool,
+    words: bool
+) -> () {
     let handler = OpenOptions::new().write(true).open(path);
     let is_ok = match handler {
         Err(ref e) => {
-            println!("Info: Can't change config to {} because: {}", lang, e);
+            println!("Info: Can't change config to {} because: {}", &lang.unwrap(), e);
             false
         },
         _ => true
@@ -75,7 +116,16 @@ pub fn set_language(config: &mut Config, lang: &str, path: &str) -> () {
     if !is_ok {
         return
     }
-    config.options.language = lang.to_owned();
+
+    if lang.is_some() {
+        config.options.language = lang.unwrap().to_owned();
+    }
+    config.options.length = length;
+    config.options.upper_letters = upper_letters;
+    config.options.lower_letters = lower_letters;
+    config.options.symbols = symbols;
+    config.options.words = words;
+    
     serde_yaml::to_writer(handler.unwrap(), &config).unwrap();
 }
 
