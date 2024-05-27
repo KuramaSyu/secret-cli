@@ -3,7 +3,7 @@ use rand::prelude::*;
 use std::io::{self, BufRead};
 use include_dir::{include_dir, Dir};
 
-use crate::config::set_language;
+use crate::config::set_defaults;
 mod config;
 
 // Embed the entire `wordlists` directory
@@ -13,7 +13,7 @@ static WORDLISTS_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/wordlists");
 #[command(author, version, about, long_about = "A tool to generate secrets. By default it uses numbers, lower case letters and upper case letters (-naA)")]
 struct Args {
     #[arg(default_value = None)]
-    length: Option<u32>,
+    length: Option<usize>,
     #[arg(short = 'n', long, action = ArgAction::SetTrue, help = "Whether to use numbers")]
     numbers: bool,
     #[arg(short = 'a', long, action = ArgAction::SetTrue, help = "Whether to use lower case letters")]
@@ -35,7 +35,7 @@ const PATH: &str = "config.yaml";
 
 fn main() {
     let args = Args::parse();
-    let length: Option<u32> = args.length;
+    let length: Option<usize> = args.length;
     let character_set: String;
     let secret: String;
     let current_dir_bind = std::env::current_dir().unwrap();
@@ -44,24 +44,38 @@ fn main() {
     let mut conf = config::load_config(PATH, verbose);
     let language = {
             if args.language.is_some() {
-                let lang = args.language.unwrap();
-                set_language(&mut conf, &lang, PATH);
-                lang
+                // given by flag
+                args.language.unwrap()
             } else {
                 let language: Option<&str> = config::get_language(&mut conf);
                 match language  {
-                    Some(l) => l.to_owned(),
-                    None => String::from("ger"),
+                    Some(l) => l.to_owned(), // given by config
+                    None => String::from("ger"), // not given
                 }
             }
         };
+    
+    if args.set_default {
+        set_defaults(
+            &mut conf, 
+            PATH,
+            Some(&language),
+            length,
+            args.upper_letters,
+            args.lower_letters,
+            args.symbols,
+            args.words
 
+        );
+    }
+    // make character set 
     if 
         !args.numbers 
         && !args.lower_letters 
         && !args.upper_letters
         && !args.symbols
     {
+        // no flags set -> use default values
         character_set = make_character_set(
             true, 
             true, 
@@ -69,6 +83,7 @@ fn main() {
             false
         );
     } else {
+        // use given flags
         character_set = make_character_set(
             args.numbers, 
             args.lower_letters, 
@@ -76,7 +91,9 @@ fn main() {
             args.symbols
         );
     }
+    // generate the secret...
     if args.words {
+        // ...with words
         let wordlist = load_wordlist_from_embedded(
             &format!("{0}.txt", language)
         ).unwrap();
@@ -89,6 +106,7 @@ fn main() {
             args.symbols
         );
     } else {
+        // ...with a character sequence
         secret = generate_character_secret(
             character_set, 
             length.unwrap_or(20) as i32
