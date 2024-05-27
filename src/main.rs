@@ -14,20 +14,22 @@ static WORDLISTS_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/wordlists");
 struct Args {
     #[arg(default_value = None)]
     length: Option<u32>,
-    #[arg(short = 'n', long, action = ArgAction::SetTrue, help = "Wether to use numbers")]
+    #[arg(short = 'n', long, action = ArgAction::SetTrue, help = "Whether to use numbers")]
     numbers: bool,
-    #[arg(short = 'a', long, action = ArgAction::SetTrue, help = "Wether to use lower case letters")]
+    #[arg(short = 'a', long, action = ArgAction::SetTrue, help = "Whether to use lower case letters")]
     lower_letters: bool,
-    #[arg(short = 'A', long, action = ArgAction::SetTrue, help = "Wether to use upper case letters")]
+    #[arg(short = 'A', long, action = ArgAction::SetTrue, help = "Whether to use upper case letters")]
     upper_letters: bool,
-    #[arg(short = 's', long, action = ArgAction::SetTrue, help = "Wether to use symbols")]
+    #[arg(short = 's', long, action = ArgAction::SetTrue, help = "Whether to use symbols")]
     symbols: bool,
-    #[arg(short = 'w', long, action = ArgAction::SetTrue, help = "Wether to use words instead of characters")]
+    #[arg(short = 'w', long, action = ArgAction::SetTrue, help = "Whether to use words instead of characters")]
     words: bool,
     #[arg(short = 'l', long, default_value = None, help = "Set the language. [ger | eng]")]
     language: Option<String>,
-    #[arg(short = 'v', long, default_value_t = false, help = "Wheter or not the program should be verbose")]
-    verbose: bool
+    #[arg(short = 'v', long, default_value_t = false, help = "Whether or not the program should be verbose")]
+    verbose: bool,
+    #[arg(short = 'd', long, default_value_t = false, help = "Whether or not to set used flags in this command as default")]
+    set_default: bool
 }
 const PATH: &str = "config.yaml";
 
