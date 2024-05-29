@@ -1,8 +1,9 @@
 use serde_yaml;
 use serde::{Serialize, Deserialize};
-use std::fs::{File, OpenOptions};
+use std::fs::{self, File, OpenOptions};
 use std::io::prelude::*;
-
+use std::path::PathBuf;
+use dirs::config_dir;
 /// Struct representing the options for generating random data.
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Options {
@@ -36,6 +37,34 @@ impl Config {
     }
 }
 
+pub fn get_config_path(verbose: bool) -> Option<PathBuf> {
+    let config_dir= config_dir();
+    if config_dir.is_none() {
+        if verbose {
+            println!("Can't find configuration directory. Fallback to default config");
+        }
+        return config_dir
+    }
+
+    // make config path
+    let mut path = config_dir.unwrap();
+    path.push("secret");
+
+    // ensure it exists
+    if !path.exists() {
+        fs::create_dir_all(&path).unwrap();
+        if verbose {println!("Creating directory tree: {:?}", path)};
+    } else {
+        if verbose {println!("Using path: {}", path.to_string_lossy())}
+    }
+    path.push("config.yaml");
+    if !path.exists() {
+        if verbose {println!("Creating {}", path.to_string_lossy())}
+        File::create(&path).unwrap_err();
+    }
+    Some(path)
+}
+
 /// Loads the configuration from a YAML file.
 ///
 /// # Arguments
@@ -46,7 +75,7 @@ impl Config {
 /// # Returns
 ///
 /// The loaded configuration.
-pub fn load_config(path: &str, verbose: bool) -> Config {
+pub fn load_config(verbose: bool) -> Config {
     let default_config: Config = Config {
         options: Options {
             language: "ger".to_owned(),
@@ -58,8 +87,11 @@ pub fn load_config(path: &str, verbose: bool) -> Config {
             numbers: false,
         }
     };
-    let handler_result = File::open(path);
-    let mut handler = match handler_result {
+    let path = get_config_path(verbose);
+    if path.is_none() {
+        return default_config
+    }
+    let mut handler = match File::open(path.as_ref().unwrap()) {
         Err(err) => {
             if verbose {
                 println!("Can't use `config.yaml`: {}", err)
@@ -72,7 +104,12 @@ pub fn load_config(path: &str, verbose: bool) -> Config {
     handler.read_to_string(&mut content).unwrap();
     let yaml_result: Result<Config, serde_yaml::Error> = serde_yaml::from_str(content.as_str());
     match yaml_result {
-        Ok(yaml_content) => yaml_content,
+        Ok(yaml_content) => {
+            if verbose {
+                println!("load config: {path:?}");
+            }
+            yaml_content
+        },
         Err(error) => {
             if verbose {
                 println!("`config.yaml` is wrong formatted: {}", error.to_string());
@@ -112,7 +149,6 @@ pub fn get_language<'a>(config: &'a mut Config) -> Option<&'a str> {
 /// * `words` - Whether to include words.
 pub fn set_defaults(
     config: &mut Config,
-    path: &str, 
     lang: Option<&str>,
     length: Option<usize>,
     upper_letters: bool,
@@ -121,7 +157,11 @@ pub fn set_defaults(
     words: bool,
     numbers: bool,
 ) -> () {
-    let handler = OpenOptions::new().write(true).open(path);
+    let path = get_config_path(false);
+    if path.is_none() {
+        return
+    }
+    let handler = OpenOptions::new().write(true).open(path.unwrap());
     let is_ok = match handler {
         Err(ref e) => {
             println!("Info: Can't change config to {} because: {}", &lang.unwrap(), e);
