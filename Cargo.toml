@@ -12,3 +12,4 @@ include_dir = "0.7"
 yaml-rust2 = "0.7"
 serde_yaml = "0.9.34"
 serde = {version = "1.0.202", features = ["derive"] }
+dirs = "5.0.1"
