@@ -1,8 +1,10 @@
 options:
-  language: eng
-  length: null
-  length_passphrase: 5
-  upper_letters: false
-  lower_letters: true
+  language: ger
+  length: 5
+  upper_letters: true
+  lower_letters: false
   symbols: false
   words: true
+  numbers: false
+
+s: true

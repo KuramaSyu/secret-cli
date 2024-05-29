@@ -60,7 +60,7 @@ pub fn get_config_path(verbose: bool) -> Option<PathBuf> {
     path.push("config.yaml");
     if !path.exists() {
         if verbose {println!("Creating {}", path.to_string_lossy())}
-        File::create(&path).unwrap_err();
+        File::create(&path).unwrap();
     }
     Some(path)
 }
