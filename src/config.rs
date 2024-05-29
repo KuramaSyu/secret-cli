@@ -148,6 +148,7 @@ pub fn get_language<'a>(config: &'a mut Config) -> Option<&'a str> {
 /// * `symbols` - Whether to include symbols.
 /// * `words` - Whether to include words.
 pub fn set_defaults(
+    verbose: bool,
     config: &mut Config,
     lang: Option<&str>,
     length: Option<usize>,
@@ -157,11 +158,11 @@ pub fn set_defaults(
     words: bool,
     numbers: bool,
 ) -> () {
-    let path = get_config_path(false);
+    let path = get_config_path(verbose);
     if path.is_none() {
         return
     }
-    let handler = OpenOptions::new().write(true).open(path.unwrap());
+    let handler = OpenOptions::new().write(true).open(path.as_ref().unwrap());
     let is_ok = match handler {
         Err(ref e) => {
             println!("Info: Can't change config to {} because: {}", &lang.unwrap(), e);
@@ -183,6 +184,9 @@ pub fn set_defaults(
     config.options.words = words;
     config.options.numbers = numbers;
     
+    if verbose {
+        println!("Writing config:\n```\n{:?}\n```\nto {}", config, path.unwrap().to_string_lossy())
+    }
     serde_yaml::to_writer(handler.unwrap(), &config).unwrap();
 }
 
