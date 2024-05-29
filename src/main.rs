@@ -60,6 +60,7 @@ fn main() {
     };
     if args.set_default {
         set_defaults(
+            verbose,
             &mut conf, 
             Some(&language),
             length,
