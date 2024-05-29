@@ -32,7 +32,6 @@ struct Args {
     #[arg(short = 'd', long, default_value_t = false, help = "Whether or not to set used flags in this command as default")]
     set_default: bool
 }
-const PATH: &str = "config.yaml";
 
 fn get_by_arg_or_config<T>(use_config: bool, cli_arg: T, config_arg: T) -> T {
     if use_config {config_arg} else {cli_arg}
@@ -46,7 +45,7 @@ fn main() {
     let current_dir_bind = std::env::current_dir().unwrap();
     let _current_dir = current_dir_bind.to_str().unwrap();
     let verbose = args.verbose;
-    let mut conf = config::load_config(PATH, verbose);
+    let mut conf = config::load_config(verbose);
     let language = {
         if args.language.is_some() {
             // given by flag
@@ -62,7 +61,6 @@ fn main() {
     if args.set_default {
         set_defaults(
             &mut conf, 
-            PATH,
             Some(&language),
             length,
             args.upper_letters,
@@ -97,7 +95,7 @@ fn main() {
         Change it by using the --set-default flag.
         Example:
         secret 10 -naAs --set-default
-"#;
+        "#;
         panic!("{}", error.lines().map(|line| line.trim()).collect::<Vec<&str>>().join("\n"));
     }
 
