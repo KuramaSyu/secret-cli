@@ -162,17 +162,13 @@ pub fn set_defaults(
     if path.is_none() {
         return
     }
-    let handler = OpenOptions::new().write(true).open(path.as_ref().unwrap());
-    let is_ok = match handler {
+    let handler = match OpenOptions::new().write(true).open(path.as_ref().unwrap()) {
         Err(ref e) => {
             println!("Info: Can't change config to {} because: {}", &lang.unwrap(), e);
-            false
+            return
         },
-        _ => true
+        Ok(handler)=> handler
     };
-    if !is_ok {
-        return
-    }
 
     if lang.is_some() {
         config.options.language = lang.unwrap().to_owned();
@@ -187,7 +183,7 @@ pub fn set_defaults(
     if verbose {
         println!("Writing config:\n```\n{:?}\n```\nto {}", config, path.unwrap().to_string_lossy())
     }
-    serde_yaml::to_writer(handler.unwrap(), &config).unwrap();
+    serde_yaml::to_writer(handler, &config).unwrap();
 }
 
 
