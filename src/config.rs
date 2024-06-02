@@ -1,9 +1,10 @@
-use serde_yaml;
 use serde::{Serialize, Deserialize};
 use std::fs::{self, File, OpenOptions};
 use std::io::prelude::*;
 use std::path::PathBuf;
 use dirs::config_dir;
+use toml;
+use colored::Colorize;
 /// Struct representing the options for generating random data.
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Options {
@@ -21,6 +22,8 @@ pub struct Options {
 pub struct Config {
     pub options: Options
 }
+
+static FILE_NAME: &str = "config.toml";
 
 impl Config {
     pub fn is_valid(&self) -> bool {
@@ -57,7 +60,7 @@ pub fn get_config_path(verbose: bool) -> Option<PathBuf> {
     } else {
         if verbose {println!("Using path: {}", path.to_string_lossy())}
     }
-    path.push("config.yaml");
+    path.push(&FILE_NAME);
     if !path.exists() {
         if verbose {println!("Creating {}", path.to_string_lossy())}
         File::create(&path).unwrap();
@@ -94,7 +97,7 @@ pub fn load_config(verbose: bool) -> Config {
     let mut handler = match File::open(path.as_ref().unwrap()) {
         Err(err) => {
             if verbose {
-                println!("Can't use `config.yaml`: {}", err)
+                println!("Can't use `{FILE_NAME}`: {}", err.to_string().red())
             }
             return default_config
         },
@@ -102,23 +105,24 @@ pub fn load_config(verbose: bool) -> Config {
     };
     let mut content = String::new();
     handler.read_to_string(&mut content).unwrap();
-    let yaml_result: Result<Config, serde_yaml::Error> = serde_yaml::from_str(content.as_str());
-    match yaml_result {
-        Ok(yaml_content) => {
+    match toml::from_str(&content) {
+        Ok(toml_content) => {
             if verbose {
-                println!("load config: {path:?}");
+                println!("load config: {}", path.unwrap().to_string_lossy().green());
             }
-            yaml_content
+            toml_content
         },
         Err(error) => {
             if verbose {
-                println!("`config.yaml` is wrong formatted: {}", error.to_string());
+                println!("`{}` is wrong formatted: {}", FILE_NAME, error.to_string().red());
                 println!("Using default config");
             }
             default_config
         }
     }
 }
+
+
 
 /// Gets the language from the configuration.
 ///
@@ -132,6 +136,8 @@ pub fn load_config(verbose: bool) -> Config {
 pub fn get_language<'a>(config: &'a mut Config) -> Option<&'a str> {
     Some(&config.options.language)
 }
+
+
 
 /// Sets the given flags as default in the config.yaml file.
 ///
@@ -162,9 +168,9 @@ pub fn set_defaults(
     if path.is_none() {
         return
     }
-    let handler = match OpenOptions::new().write(true).open(path.as_ref().unwrap()) {
+    let mut handler = match OpenOptions::new().write(true).open(path.as_ref().unwrap()) {
         Err(ref e) => {
-            println!("Info: Can't change config to {} because: {}", &lang.unwrap(), e);
+            println!("Info: Can't change config to {} because: {}", &lang.unwrap(), e.to_string().red());
             return
         },
         Ok(handler)=> handler
@@ -180,10 +186,11 @@ pub fn set_defaults(
     config.options.words = words;
     config.options.numbers = numbers;
     
+    let toml_content = toml::to_string_pretty(&config).unwrap();
     if verbose {
-        println!("Writing config:\n```\n{:?}\n```\nto {}", config, path.unwrap().to_string_lossy())
+        println!("Writing config:\n```\n{}\n```\nto {}", &toml_content.green(), path.unwrap().to_string_lossy().green())
     }
-    serde_yaml::to_writer(handler, &config).unwrap();
+    handler.write_all(toml_content.as_bytes()).unwrap();
 }
 
 
