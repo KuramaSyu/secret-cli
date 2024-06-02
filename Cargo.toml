@@ -12,3 +12,4 @@ include_dir = "0.7"
 serde = {version = "1.0.202", features = ["derive"] }
 dirs = "5.0.1"
 toml = "0.8.13"
+colored = "2.1.0"
